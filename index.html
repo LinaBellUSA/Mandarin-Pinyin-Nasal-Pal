@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>儿童前后鼻音学习助手</title>
+    <script src="https://cdn.tailwindcss.com/3.3.3"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            /* 离线字体回退，避免Google字体加载错误 */
+            font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', 'Hiragino Sans GB', 'WenQuanYi Micro Hei', Arial, sans-serif;
+            background-color: #f0f9ff;
+            color: #333;
+        }
+        .card {
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border-radius: 12px;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+        }
+        .btn-primary {
+            background-color: #60a5fa;
+            color: white;
+            transition: all 0.3s ease;
+        }
+        .btn-primary:hover {
+            background-color: #3b82f6;
+        }
+        .btn-secondary {
+            background-color: #f472b6;
+            color: white;
+            transition: all 0.3s ease;
+        }
+        .btn-secondary:hover {
+            background-color: #ec4899;
+        }
+        .correct {
+            background-color: #d1fae5;
+            border-color: #10b981;
+        }
+        .incorrect {
+            background-color: #fee2e2;
+            border-color: #ef4444;
+        }
+        .modal {
+            transition: opacity 0.3s ease;
+        }
+        .word-card {
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .word-card:hover {
+            transform: scale(1.05);
+        }
+        .draggable {
+            cursor: grab;
+        }
+        .draggable:active {
+            cursor: grabbing;
+        }
+        .drop-target {
+            transition: all 0.3s ease;
+        }
+        .drop-target.highlight {
+            background-color: rgba(96, 165, 250, 0.2);
+        }
+        .progress-bar {
+            height: 10px;
+            background-color: #e2e8f0;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        .progress {
+            height: 100%;
+            background-color: #60a5fa;
+            border-radius: 5px;
+            transition: width 0.3s ease;
+        }
+        .character-animation {
+            animation: bounce 1s infinite alternate;
+        }
+        @keyframes bounce {
+            from { transform: translateY(0); }
+            to { transform: translateY(-10px); }
+        }
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background-color: #f472b6;
+            border-radius: 50%;
+            animation: confetti-fall 3s ease-in-out;
+            opacity: 0;
+        }
+        @keyframes confetti-fall {
+            0% { transform: translateY(-100px); opacity: 1; }
+            100% { transform: translateY(500px); opacity: 0; }
+        }
+        /* 离线保障：确保hidden类有效 */
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body class="min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <!-- 头部和导航 -->
+        <header class="bg-white rounded-2xl shadow-sm p-6 mb-8">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <div class="flex items-center mb-4 md:mb-0">
+                    <img id="headerImg" src="./Gemini_Generated_Image_1ubdb81ubdb81ubd.png" alt="前后鼻音学习助手图标" class="h-16 w-16 mr-4 rounded-lg"/>
+                    <h1 class="text-3xl font-bold text-gray-800">儿童前后鼻音学习助手</h1>
+                </div>
+                <div class="flex flex-wrap justify-center gap-2">
+                    <button id="homeBtn" class="px-4 py-2 rounded-lg btn-primary">
+                        <i class="fas fa-home mr-2"></i>首页
+                    </button>
+                    <button id="compareBtn" class="px-4 py-2 rounded-lg btn-primary">
+                        <i class="fas fa-headphones mr-2"></i>对比听读
+                    </button>
+                    <button id="classifyBtn" class="px-4 py-2 rounded-lg btn-secondary">
+                        <i class="fas fa-gamepad mr-2"></i>分类游戏
+                    </button>
+                    <button id="challengeBtn" class="px-4 py-2 rounded-lg btn-secondary">
+                        <i class="fas fa-trophy mr-2"></i>辨音挑战
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- 首页内容 -->
+        <div id="homeSection" class="bg-white rounded-2xl shadow-sm p-6 mb-8">
+            <div class="text-center mb-8">
+                <h2 class="text-2xl font-bold mb-4">欢迎来到前后鼻音学习世界！</h2>
+                <p class="text-lg mb-6">通过有趣的方式学习区分前鼻音和后鼻音</p>
+                <div class="character-animation inline-block">
+                    <img id="heroImg" src="./Gemini_Generated_Image_1ubdb81ubdb81ubd.png" alt="前后鼻音主题插画" class="h-40 rounded-xl"/>
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div class="card p-6 text-center bg-blue-50">
+                    <div class="text-4xl mb-4 text-blue-500">
+                        <i class="fas fa-headphones"></i>
+                    </div>
+                    <div class="text-xl font-bold mb-2">对比听读</div>
+                    <p class="mb-4">通过听读对比，学习前后鼻音的发音区别</p>
+                    <button class="goToCompareBtn px-4 py-2 rounded-lg btn-primary w-full">开始学习</button>
+                </div>
+                <div class="card p-6 text-center bg-pink-50">
+                    <div class="text-4xl mb-4 text-pink-500">
+                        <i class="fas fa-gamepad"></i>
+                    </div>
+                    <div class="text-xl font-bold mb-2">分类游戏</div>
+                    <p class="mb-4">将词语拖放到正确的分类中，巩固前后鼻音知识</p>
+                    <button class="goToClassifyBtn px-4 py-2 rounded-lg btn-secondary w-full">开始游戏</button>
+                </div>
+                <div class="card p-6 text-center bg-purple-50">
+                    <div class="text-4xl mb-4 text-purple-500">
+                        <i class="fas fa-trophy"></i>
+                    </div>
+                    <div class="text-xl font-bold mb-2">辨音挑战</div>
+                    <p class="mb-4">听音辨别，挑战你的前后鼻音识别能力</p>
+                    <button class="goToChallengeBtn px-4 py-2 rounded-lg btn-secondary w-full">开始挑战</button>
+                </div>
+            </div>
+            
+            <div class="text-center">
+                <div class="progress-bar mx-auto w-full max-w-md mb-2">
+                    <div class="progress" style="width: 0%"></div>
+                </div>
+                <p class="text-sm text-gray-600">继续学习，解锁更多成就！</p>
+            </div>
+        </div>
+
+        <!-- 对比听读模块 -->
+        <div id="compareSection" class="bg-white rounded-2xl shadow-sm p-6 mb-8 hidden">
+            <h2 class="text-2xl font-bold mb-6 text-center">对比听读与跟读</h2>
+            
+            <div class="flex justify-center mb-6">
+                <div class="text-center w-full">
+                    <div class="flex justify-between mb-4">
+                        <button id="prevBtn" class="px-4 py-2 rounded-lg btn-secondary">
+                            <i class="fas fa-arrow-left"></i> 上一组
+                        </button>
+                        <span id="pairCounter" class="px-4 py-2 bg-gray-100 rounded-lg">1/98</span>
+                        <button id="nextBtn" class="px-4 py-2 rounded-lg btn-secondary">
+                            下一组 <i class="fas fa-arrow-right"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-6">
+                        <div class="card p-6 text-center bg-blue-50">
+                            <h3 class="text-lg font-semibold mb-2">前鼻音</h3>
+                            <p id="frontNasalWord" class="text-3xl font-bold mb-1">饭</p>
+                            <p id="frontPinyin" class="text-base text-gray-600 mb-4">fàn</p>
+                            <button class="playFrontBtn px-4 py-2 rounded-lg btn-primary w-full">
+                                <i class="fas fa-volume-up mr-2"></i> 播放发音
+                            </button>
+                        </div>
+                        <div class="card p-6 text-center bg-pink-50">
+                            <h3 class="text-lg font-semibold mb-2">后鼻音</h3>
+                            <p id="backNasalWord" class="text-3xl font-bold mb-1">放</p>
+                            <p id="backPinyin" class="text-base text-gray-600 mb-4">fàng</p>
+                            <button class="playBackBtn px-4 py-2 rounded-lg btn-primary w-full">
+                                <i class="fas fa-volume-up mr-2"></i> 播放发音
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="flex justify-center gap-4">
+                        <button id="wordListBtn" class="px-4 py-2 rounded-lg btn-secondary">
+                            <i class="fas fa-list mr-2"></i> 查看词汇表
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 分类游戏模块 -->
+        <div id="classifySection" class="bg-white rounded-2xl shadow-sm p-6 mb-8 hidden">
+            <h2 class="text-2xl font-bold mb-6 text-center">分类游戏</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+                <div class="card p-6 text-center bg-blue-50">
+                    <h3 class="text-xl font-semibold mb-4">前鼻音</h3>
+                    <div id="frontNasalBasket" class="min-h-40 border-2 border-dashed border-blue-300 rounded-lg p-4 drop-target"></div>
+                </div>
+                <div class="card p-6 text-center bg-pink-50">
+                    <h3 class="text-xl font-semibold mb-4">后鼻音</h3>
+                    <div id="backNasalBasket" class="min-h-40 border-2 border-dashed border-pink-300 rounded-lg p-4 drop-target"></div>
+                </div>
+            </div>
+            
+            <div class="text-center">
+                <div id="wordPool" class="flex flex-wrap justify-center gap-4 mb-8">
+                    <!-- 单词卡片将通过JS动态生成 -->
+                </div>
+                <div class="flex justify-center gap-4">
+                    <button id="checkClassifyBtn" class="px-4 py-2 rounded-lg btn-primary">
+                        <i class="fas fa-check mr-2"></i> 检查答案
+                    </button>
+                    <button id="newGameBtn" class="px-4 py-2 rounded-lg btn-secondary">
+                        <i class="fas fa-redo mr-2"></i> 新游戏
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 辨音挑战模块 -->
+        <div id="challengeSection" class="bg-white rounded-2xl shadow-sm p-6 mb-8 hidden">
+            <h2 class="text-2xl font-bold mb-6 text-center">辨音挑战</h2>
+            
+            <div class="text-center mb-8">
+                <div class="mb-4">
+                    <span id="scoreDisplay" class="text-xl font-bold">得分: 0</span>
+                </div>
+                <button id="playChallengeBtn" class="px-6 py-3 rounded-lg btn-primary text-lg">
+                    <i class="fas fa-volume-up mr-2"></i> 播放词语
+                </button>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                <button class="optionBtn px-6 py-4 rounded-lg text-lg font-semibold border-2 border-gray-200 hover:bg-gray-100">
+                    <span id="option1" class="text-xl">前鼻音</span>
+                </button>
+                <button class="optionBtn px-6 py-4 rounded-lg text-lg font-semibold border-2 border-gray-200 hover:bg-gray-100">
+                    <span id="option2" class="text-xl">后鼻音</span>
+                </button>
+            </div>
+            
+            <div class="text-center">
+                <button id="nextChallengeBtn" class="px-4 py-2 rounded-lg btn-secondary">
+                    <i class="fas fa-arrow-right mr-2"></i> 下一题
+                </button>
+            </div>
+        </div>
+
+        <!-- 反馈模态框 -->
+        <div id="feedbackModal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 hidden modal z-50">
+            <div class="bg-white rounded-lg p-6 max-w-md w-full text-center">
+                <div id="feedbackIcon" class="text-5xl mb-4">
+                    <i class="fas fa-check-circle text-green-500"></i>
+                </div>
+                <div id="feedbackTitle" class="text-xl font-bold mb-2">回答正确!</div>
+                <p id="feedbackMessage" class="mb-4">太棒了! 你答对了!</p>
+                <button id="closeModalBtn" class="px-4 py-2 rounded-lg btn-primary">
+                    继续
+                </button>
+            </div>
+        </div>
+
+        <!-- 单词列表模态框 -->
+        <div id="wordListModal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 hidden modal z-50">
+            <div class="bg-white rounded-lg p-6 max-w-4xl w-full max-h-[80vh] overflow-y-auto">
+                <h3 class="text-xl font-bold mb-4 text-center">前后鼻音词汇表</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <h4 class="font-semibold mb-2 text-blue-600">前鼻音</h4>
+                        <ul id="frontNasalList" class="space-y-2">
+                            <!-- 前鼻音单词列表将通过JS动态生成 -->
+                        </ul>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold mb-2 text-pink-600">后鼻音</h4>
+                        <ul id="backNasalList" class="space-y-2">
+                            <!-- 后鼻音单词列表将通过JS动态生成 -->
+                        </ul>
+                    </div>
+                </div>
+                <div class="text-center mt-6">
+                    <button id="closeWordListBtn" class="px-4 py-2 rounded-lg btn-primary">
+                        关闭
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+        <!-- 错题本模态框 -->
+        <div id="mistakeListModal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 hidden modal z-50">
+            <div class="bg-white rounded-lg p-6 max-w-2xl w-full max-h-[80vh] overflow-y-auto">
+                <h3 class="text-xl font-bold mb-4 text-center">错题本</h3>
+                <div class="flex justify-center gap-4 mb-4">
+                    <button id="sortByTimeBtn" class="px-4 py-2 rounded-lg btn-primary">
+                        <i class="fas fa-clock mr-2"></i> 按时间
+                    </button>
+                    <button id="sortByFrequencyBtn" class="px-4 py-2 rounded-lg btn-secondary">
+                        <i class="fas fa-sort-amount-down mr-2"></i> 按错误次数
+                    </button>
+                </div>
+                <div id="mistakeListContainer"></div>
+                <div class="text-center mt-4">
+                    <button id="closeMistakeListBtn" class="px-4 py-2 rounded-lg btn-primary">关闭</button>
+                </div>
+            </div>
+        </div>
+
+    <footer class="bg-white p-4 text-center text-gray-600 mt-8">
+        <p>© 2023 儿童前后鼻音学习助手 | 让学习更有趣</p>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
